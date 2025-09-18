@@ -1,179 +1,185 @@
 export class AFND {
-  constructor(estados, alphabet, transicoes, estadoInicial, final_states) {
-    this.estados = new Set(estados);
+  constructor(states, alphabet, transitions, initial_state, final_states) {
+    this.states = new Set(states);
     this.alphabet = new Set(alphabet);
-    this.transicoes = new Map();
+    this.transitions = new Map();
 
-    // Normaliza transições (aceita objeto { (estado, simbolo): {destinos} })
-    if (transicoes instanceof Map) {
-      this.transicoes = transicoes;
+    if (transitions instanceof Map) {
+      this.transitions = transitions;
     } else {
-      for (const [key, destinos] of Object.entries(transicoes)) {
-        this.transicoes.set(JSON.parse(key), new Set(destinos));
+      for (const [key, destinations] of Object.entries(transitions)) {
+        this.transitions.set(JSON.parse(key), new Set(destinations));
       }
     }
 
-    this.estadoInicial = estadoInicial;
+    this.initial_state = initial_state;
     this.final_states = new Set(final_states);
   }
 
-  push_state(estado, is_final = false) {
-    this.estados.add(estado);
-    if (is_final) this.final_states.add(estado);
+  add_state(state, is_final = false) {
+    this.states.add(state);
+    if (is_final) this.final_states.add(state);
   }
 
-  push_transition(origem, simbolo, destino) {
-    if (!this.estados.has(origem)) {
-      throw new Error(`Estado de origem '${origem}' não existe.`);
+  add_transition(origin, symbol, destination) {
+    if (!this.states.has(origin)) {
+      throw new Error(`Origin state '${origin}' does not exist.`);
     }
-    if (!this.estados.has(destino)) {
-      throw new Error(`Estado de destino '${destino}' não existe.`);
+    if (!this.states.has(destination)) {
+      throw new Error(`Destination state '${destination}' does not exist.`);
     }
-    if (simbolo && !this.alphabet.has(simbolo)) {
-      throw new Error(`Símbolo '${simbolo}' não pertence ao alphabet.`);
+    if (symbol && !this.alphabet.has(symbol)) {
+      throw new Error(`Symbol '${symbol}' does not belong to the alphabet.`);
     }
 
-    const chave = JSON.stringify([origem, simbolo]);
-    if (this.transicoes.has(chave)) {
-      this.transicoes.get(chave).add(destino);
+    const key = JSON.stringify([origin, symbol]);
+    if (this.transitions.has(key)) {
+      this.transitions.get(key).add(destination);
     } else {
-      this.transicoes.set(chave, new Set([destino]));
+      this.transitions.set(key, new Set([destination]));
     }
   }
 
-  determinizar() {
-    const estadoInicialAfd = new Set([this.estadoInicial]);
-    const afdTransicoes = new Map();
-    const afdfinal_states = new Set();
+  determinize() {
+    const dfaStatesMap = new Map();
+    const dfaTransitions = new Map();
+    const dfaFinalStates = new Set();
+    const dfaAlphabet = new Set(this.alphabet);
 
-    const mapaEstados = new Map();
-    mapaEstados.set(JSON.stringify([...estadoInicialAfd]), "D0");
+    let stateCounter = 0;
 
-    const filaTrabalho = [estadoInicialAfd];
-    let contEstados = 1;
+    const startSet = new Set([this.initial_state]);
+    const startKey = [...startSet].sort().join(",");
+    dfaStatesMap.set(startKey, `D${stateCounter++}`);
 
-    while (filaTrabalho.length > 0) {
-      const conjuntoAtualNfa = filaTrabalho.shift();
-      const nomeEstadoAtualDfa = mapaEstados.get(
-        JSON.stringify([...conjuntoAtualNfa])
-      );
+    const queue = [startSet];
 
-      for (const simbolo of this.alphabet) {
-        const proximosEstadosNfa = new Set();
+    while (queue.length > 0) {
+      const currentSet = queue.shift();
+      const currentKey = [...currentSet].sort().join(",");
+      const currentDfaState = dfaStatesMap.get(currentKey);
 
-        for (const estadoNfa of conjuntoAtualNfa) {
-          const chave = JSON.stringify([estadoNfa, simbolo]);
-          const destinos = this.transicoes.get(chave) || new Set();
-          for (const d of destinos) proximosEstadosNfa.add(d);
+      dfaAlphabet.forEach((symbol) => {
+        const nextSet = new Set();
+
+        currentSet.forEach((nfaState) => {
+          // percorre todas as keys do Map e pega as que batem
+          for (const [tKey, destinations] of this.transitions.entries()) {
+            const [origin, transSymbol] = Array.isArray(tKey)
+              ? tKey
+              : JSON.parse(tKey);
+            if (origin === nfaState && transSymbol === symbol) {
+              destinations.forEach((target) => nextSet.add(target));
+            }
+          }
+        });
+
+        if (nextSet.size === 0) return;
+
+        const nextKey = [...nextSet].sort().join(",");
+        if (!dfaStatesMap.has(nextKey)) {
+          dfaStatesMap.set(nextKey, `D${stateCounter++}`);
+          queue.push(nextSet);
         }
 
-        if (proximosEstadosNfa.size === 0) continue;
-
-        const chaveProx = JSON.stringify([...proximosEstadosNfa]);
-        if (!mapaEstados.has(chaveProx)) {
-          const novoNome = `D${contEstados}`;
-          mapaEstados.set(chaveProx, novoNome);
-          filaTrabalho.push(proximosEstadosNfa);
-          contEstados++;
-        }
-
-        const nomeProx = mapaEstados.get(chaveProx);
-        afdTransicoes.set(
-          JSON.stringify([nomeEstadoAtualDfa, simbolo]),
-          new Set([nomeProx])
+        const nextDfaState = dfaStatesMap.get(nextKey);
+        dfaTransitions.set(
+          `${currentDfaState},${symbol}`,
+          new Set([nextDfaState])
         );
-      }
+      });
     }
 
-    const dfaEstados = new Set(mapaEstados.values());
-    for (const [conjuntoNfaJson, nomeDfa] of mapaEstados.entries()) {
-      const conjuntoNfa = new Set(JSON.parse(conjuntoNfaJson));
-      for (const final of this.final_states) {
-        if (conjuntoNfa.has(final)) {
-          afdfinal_states.add(nomeDfa);
+    // identificar estados finais
+    for (const [key, dfaState] of dfaStatesMap.entries()) {
+      const nfaStates = new Set(key.split(","));
+      for (const fs of this.final_states) {
+        if (nfaStates.has(fs)) {
+          dfaFinalStates.add(dfaState);
+          break;
         }
       }
     }
 
     return new AFND(
-      dfaEstados,
-      this.alphabet,
-      afdTransicoes,
-      "D0",
-      afdfinal_states
+      new Set(dfaStatesMap.values()),
+      dfaAlphabet,
+      dfaTransitions,
+      dfaStatesMap.get(startKey),
+      dfaFinalStates
     );
   }
 
-  next_state(estadoAtual, simbolo) {
-    const chave = JSON.stringify([estadoAtual, simbolo]);
-    const destinos = this.transicoes.get(chave) || new Set();
-    if (destinos.size > 0) {
-      return [...destinos][0];
+  next_state(current_state, symbol) {
+    const key = `${current_state},${symbol}`;
+    const destinations = this.transitions.get(key) || new Set();
+
+    if (destinations.size > 0) {
+      return [...destinations][0];
     }
     return null;
   }
 
-  exibir_automato() {
-    const estadoInicial = this.estadoInicial;
-    const outrosEstados = [...this.estados].filter((e) => e !== estadoInicial);
-    const estadosOrdenados = [estadoInicial, ...outrosEstados.sort()];
+  display_automaton() {
+    const initial_state = this.initial_state;
+    const other_states = [...this.states].filter((s) => s !== initial_state);
+    const ordered_states = [initial_state, ...other_states.sort()];
 
-    const hasEpsilon = [...this.transicoes.keys()].some(
+    const has_epsilon = [...this.transitions.keys()].some(
       (k) => JSON.parse(k)[1] === ""
     );
 
-    const alfabetoOrdenado = [...this.alphabet].sort();
-    if (hasEpsilon) alfabetoOrdenado.push("");
+    const ordered_alphabet = [...this.alphabet].sort();
+    if (has_epsilon) ordered_alphabet.push("");
 
-    const larguraCols = {};
-    for (const s of alfabetoOrdenado) larguraCols[s] = s === "" ? 1 : s.length;
-
-    let larguraColEstados = 0;
-    for (const estado of estadosOrdenados) {
-      let prefixo = "";
-      if (estado === this.estadoInicial) prefixo += "->";
-      if (this.final_states.has(estado)) prefixo += "*";
-      larguraColEstados = Math.max(
-        larguraColEstados,
-        (prefixo + estado).length
-      );
+    const col_widths = {};
+    for (const s of ordered_alphabet) {
+      col_widths[s] = s === "" ? 1 : s.length;
     }
 
-    // Cabeçalho
-    process.stdout.write(" ".padEnd(larguraColEstados) + " |");
-    for (const simbolo of alfabetoOrdenado) {
-      const disp = simbolo === "" ? "ε" : simbolo;
+    let state_col_width = 0;
+    for (const state of ordered_states) {
+      let prefix = "";
+      if (state === this.initial_state) prefix += "->";
+      if (this.final_states.has(state)) prefix += "*";
+      state_col_width = Math.max(state_col_width, (prefix + state).length);
+    }
+
+    process.stdout.write(" ".padEnd(state_col_width) + " |");
+    for (const symbol of ordered_alphabet) {
+      const disp = symbol === "" ? "ε" : symbol;
       process.stdout.write(
         ` ${disp
-          .padStart(larguraCols[simbolo], " ")
-          .padEnd(larguraCols[simbolo], " ")} |`
+          .padStart(col_widths[symbol], " ")
+          .padEnd(col_widths[symbol], " ")} |`
       );
     }
     console.log();
 
     console.log(
-      "-".repeat(larguraColEstados) +
+      "-".repeat(state_col_width) +
         "+" +
-        alfabetoOrdenado.map((s) => "-".repeat(larguraCols[s] + 2)).join("+") +
+        ordered_alphabet.map((s) => "-".repeat(col_widths[s] + 2)).join("+") +
         "+"
     );
 
-    // Linhas
-    for (const estado of estadosOrdenados) {
-      let prefixo = "";
-      if (estado === this.estadoInicial) prefixo += "->";
-      if (this.final_states.has(estado)) prefixo += "*";
+    for (const state of ordered_states) {
+      let prefix = "";
+      if (state === this.initial_state) prefix += "->";
+      if (this.final_states.has(state)) prefix += "*";
 
       process.stdout.write(
-        (prefixo + estado).padEnd(larguraColEstados, " ") + " |"
+        (prefix + state).padEnd(state_col_width, " ") + " |"
       );
 
-      for (const simbolo of alfabetoOrdenado) {
-        const chave = JSON.stringify([estado, simbolo]);
-        const destinos = this.transicoes.get(chave) || new Set();
-        const texto =
-          destinos.size > 0 ? `{${[...destinos].sort().join(", ")}}` : "-";
-        process.stdout.write(` ${texto.padEnd(larguraCols[simbolo])} |`);
+      for (const symbol of ordered_alphabet) {
+        const key = JSON.stringify([state, symbol]);
+        const destinations = this.transitions.get(key) || new Set();
+        const text =
+          destinations.size > 0
+            ? `{${[...destinations].sort().join(", ")}}`
+            : "-";
+        process.stdout.write(` ${text.padEnd(col_widths[symbol])} |`);
       }
       console.log();
     }

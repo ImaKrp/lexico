@@ -3,12 +3,10 @@ function analyzer(automaton, tape, ts, conteudo) {
     line = line.trim().split(" ");
 
     line.forEach((label) => {
-      let curr_state = automaton.estadoInicial;
+      let curr_state = automaton.initial_state;
 
       for (const c of label) {
         const next_state = automaton.next_state(curr_state, c);
-
-        console.log(automaton);
 
         if (!next_state) {
           curr_state = "X";
@@ -21,8 +19,6 @@ function analyzer(automaton, tape, ts, conteudo) {
       if (!automaton.final_states.has(curr_state)) {
         curr_state = "X";
       }
-
-      console.log(curr_state, i, label);
 
       tape.push(curr_state);
       ts.push({ line: i, state: curr_state, label });

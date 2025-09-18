@@ -1,5 +1,5 @@
 import read from "./utils/read.js";
-import { unirAFNDs } from "./utils/assembler.js";
+import { merge } from "./utils/assembler.js";
 import * as generate from "./utils/generate.js";
 import analyzer from "./utils/analyzer.js";
 
@@ -16,11 +16,12 @@ try {
   let AFNDs = [];
   AFNDs = generate.byTokens(tokens);
   AFNDs = generate.byGrammar(grammar, AFNDs);
-  let AFNDUnique = unirAFNDs(AFNDs);
-  let AFDetrministico = AFNDUnique.determinizar();
+  let mergedAFND = merge(AFNDs);
+  let AFDetrministico = mergedAFND.determinize();
+
   analyzer(AFDetrministico, tape, ts, example);
 
-  console.log(tape);
+  console.log(`[${tape.join(", ")}]\n`);
   ts.forEach((txt) =>
     console.log(`${txt.line} | ${txt.state}  | ${txt.label}`)
   );

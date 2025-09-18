@@ -1,19 +1,12 @@
 import { AFND } from "../AFND/index.js";
 
-/**
- * Junta dois ou mais AFNDs em um único.
- *
- * @param {AFND[]} AFNDs
- * @param {string} estadoInicial - Padrão "q0"
- * @returns {AFND}
- */
-export function unirAFNDs(AFNDs, estadoInicial = "q0") {
+export function merge(AFNDs, initial_state = "q0") {
   if (!AFNDs || AFNDs.length === 0) {
     return new AFND(
-      new Set([estadoInicial]),
+      new Set([initial_state]),
       new Set(),
       {},
-      estadoInicial,
+      initial_state,
       new Set()
     );
   }
@@ -21,53 +14,51 @@ export function unirAFNDs(AFNDs, estadoInicial = "q0") {
     return AFNDs[0];
   }
 
-  const novosEstados = new Set([estadoInicial]);
-  const novoAlfabeto = new Set();
-  const novasTransicoes = {};
-  const novosfinal_states = new Set();
+  const newStates = new Set([initial_state]);
+  const newAlphabet = new Set();
+  const newTransitions = {};
+  const newFinalStates = new Set();
 
-  AFNDs.forEach((automato, i) => {
-    const mapaRenomeacao = { [automato.estadoInicial]: estadoInicial };
+  AFNDs.forEach((automaton, i) => {
+    const renameMap = { [automaton.initial_state]: initial_state };
 
-    // Renomeia estados (menos o inicial)
-    for (const estado of automato.estados) {
-      if (estado !== automato.estadoInicial) {
-        mapaRenomeacao[estado] = `${i}.${estado}`;
+    // Rename states (except the initial one)
+    for (const state of automaton.states) {
+      if (state !== automaton.initial_state) {
+        renameMap[state] = `${i}.${state}`;
       }
     }
 
-    // Adiciona estados e alphabet
-    novosEstados.forEach((e) => novosEstados.add(e));
-    for (const e of Object.values(mapaRenomeacao)) novosEstados.add(e);
-    for (const a of automato.alphabet) novoAlfabeto.add(a);
+    // Add states and alphabet
+    newStates.forEach((s) => newStates.add(s));
+    for (const s of Object.values(renameMap)) newStates.add(s);
+    for (const a of automaton.alphabet) newAlphabet.add(a);
 
-    // Estados finais
-    for (const ef of automato.final_states) {
-      novosfinal_states.add(mapaRenomeacao[ef]);
+    // Final states
+    for (const fs of automaton.final_states) {
+      newFinalStates.add(renameMap[fs]);
     }
 
-    // Transições
-    for (const [key, destinos] of automato.transicoes.entries()) {
-      const [origem, simbolo] = JSON.parse(key);
-      const novaOrigem = mapaRenomeacao[origem];
-      const novosDestinos = new Set(
-        [...destinos].map((d) => mapaRenomeacao[d])
-      );
+    // Transitions
+    for (const [key, targets] of automaton.transitions.entries()) {
+      const [origin, symbol] = JSON.parse(key);
+      const newOrigin = renameMap[origin];
+      const newTargets = new Set([...targets].map((t) => renameMap[t]));
 
-      const chaveTransicao = JSON.stringify([novaOrigem, simbolo]);
-      if (novasTransicoes[chaveTransicao]) {
-        for (const d of novosDestinos) novasTransicoes[chaveTransicao].add(d);
+      const transitionKey = JSON.stringify([newOrigin, symbol]);
+      if (newTransitions[transitionKey]) {
+        for (const t of newTargets) newTransitions[transitionKey].add(t);
       } else {
-        novasTransicoes[chaveTransicao] = novosDestinos;
+        newTransitions[transitionKey] = newTargets;
       }
     }
   });
 
   return new AFND(
-    novosEstados,
-    novoAlfabeto,
-    novasTransicoes,
-    estadoInicial,
-    novosfinal_states
+    newStates,
+    newAlphabet,
+    newTransitions,
+    initial_state,
+    newFinalStates
   );
 }

@@ -10,8 +10,8 @@ export function byTokens(tokens, AFNDs = []) {
       i++;
       const new_state = "q" + i;
       automaton.alphabet.add(char);
-      automaton.push_state(new_state);
-      automaton.push_transition(curr_state, char, new_state);
+      automaton.add_state(new_state);
+      automaton.add_transition(curr_state, char, new_state);
       curr_state = new_state;
     }
 
@@ -22,81 +22,67 @@ export function byTokens(tokens, AFNDs = []) {
 
   return AFNDs;
 }
-
 export function byGrammar(grammar, AFNDs = []) {
-  const non_terminal_relactions = {};
-  const final_states = new Set();
-  const states = new Set();
-  let non_terminal_states = new Set();
+  const rawStates = new Set();
+  const rawFinalStates = new Set();
+  const rawTransitions = [];
 
   grammar.forEach((production) => {
     const [state, transitions] = production.split("::=");
-    non_terminal_states.add(state.trim());
+    const from = state.trim();
+
+    rawStates.add(from);
 
     transitions.split("|").forEach((prod) => {
-      if (!prod) final_states.add(state);
-      else non_terminal_states.add(state);
-    });
-  });
+      const trimmed = prod.trim();
 
-  non_terminal_states = [...non_terminal_states].sort((a, b) => {
-    if (a === "S") return -1;
-    if (b === "S") return 1;
-    return a.localeCompare(b);
-  });
+      if (!trimmed) {
+        rawFinalStates.add(from);
+        return;
+      }
 
-  let i = 0;
-
-  non_terminal_states.forEach((nt) => {
-    const new_name = `q${i}`;
-    non_terminal_relactions[nt] = new_name;
-    states.add(new_name);
-    i++;
-  });
-
-  final_states.forEach((nt) => {
-    const new_name = `q${i}`;
-    final_states[nt] = new_name;
-    states.add(new_name);
-    i++;
-  });
-
-  const simboloInicial = grammar[0].split("::=")[0].trim();
-  const estadoInicial = non_terminal_relactions[simboloInicial];
-
-  const automato = new AFND(states, new Set(), {}, estadoInicial, final_states);
-
-  grammar.forEach((production) => {
-    let [state, transitions] = production.split("::=");
-    state = state.trim();
-    const from_state = non_terminal_relactions[state];
-
-    for (const prod of transitions.split("|")) {
-      let proximoEstado = "";
       let terminal = "";
+      let nextState = "";
 
-      for (const char of prod.trim()) {
-        if (char >= "A" && char <= "Z") {
-          proximoEstado = char;
+      trimmed.split("").forEach((char) => {
+        if (/[A-Z]/.test(char)) {
+          nextState = char;
+          rawStates.add(char);
         } else {
           terminal += char;
         }
-      }
+      });
 
-      if (terminal) {
-        automato.alphabet.add(terminal);
-      } else {
-        automato.final_states.add(from_state);
-      }
-
-      if (!proximoEstado) continue;
-
-      const estadoDestino = non_terminal_relactions[proximoEstado];
-      automato.push_transition(from_state, terminal, estadoDestino);
-    }
+      rawTransitions.push({ from, terminal, to: nextState });
+    });
   });
 
-  AFNDs.push(automato);
+  const sortedStates = [...rawStates].sort((a, b) =>
+    a === "S" ? -1 : b === "S" ? 1 : a.localeCompare(b)
+  );
 
+  const stateMap = new Map();
+  const states = new Set();
+
+  sortedStates.forEach((st, i) => {
+    const newName = `q${i}`;
+    stateMap.set(st, newName);
+    states.add(newName);
+  });
+
+  const finals = new Set([...rawFinalStates].map((st) => stateMap.get(st)));
+
+  const startSymbol = grammar[0].split("::=")[0].trim();
+  const initialState = stateMap.get(startSymbol);
+
+  const automaton = new AFND(states, new Set(), {}, initialState, finals);
+
+  rawTransitions.forEach(({ from, terminal, to }) => {
+    if (terminal) automaton.alphabet.add(terminal);
+    if (to)
+      automaton.add_transition(stateMap.get(from), terminal, stateMap.get(to));
+  });
+
+  AFNDs.push(automaton);
   return AFNDs;
 }
