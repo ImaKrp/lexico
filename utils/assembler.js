@@ -22,24 +22,20 @@ export function merge(AFNDs, initial_state = "q0") {
   AFNDs.forEach((automaton, i) => {
     const renameMap = { [automaton.initial_state]: initial_state };
 
-    // Rename states (except the initial one)
     for (const state of automaton.states) {
       if (state !== automaton.initial_state) {
         renameMap[state] = `${i}.${state}`;
       }
     }
 
-    // Add states and alphabet
     newStates.forEach((s) => newStates.add(s));
     for (const s of Object.values(renameMap)) newStates.add(s);
     for (const a of automaton.alphabet) newAlphabet.add(a);
 
-    // Final states
     for (const fs of automaton.final_states) {
       newFinalStates.add(renameMap[fs]);
     }
-
-    // Transitions
+    
     for (const [key, targets] of automaton.transitions.entries()) {
       const [origin, symbol] = JSON.parse(key);
       const newOrigin = renameMap[origin];

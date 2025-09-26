@@ -1,4 +1,6 @@
-function analyzer(automaton, tape, ts, conteudo) {
+function analyzer(automaton, conteudo) {
+  const tape = [];
+  const ts = [];
   conteudo.split("\n").forEach((line, i) => {
     line = line.trim().split(" ");
 
@@ -24,6 +26,8 @@ function analyzer(automaton, tape, ts, conteudo) {
       ts.push({ line: i, state: curr_state, label });
     });
   });
+
+  return { tape, ts };
 }
 
 export default analyzer;

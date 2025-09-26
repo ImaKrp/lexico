@@ -1,6 +1,8 @@
 import { AFND } from "../AFND/index.js";
+import { merge } from "./assembler.js";
 
-export function byTokens(tokens, AFNDs = []) {
+export function generateAFNDs(tokens, grammar) {
+  const AFNDs = [];
   tokens.map((t) => {
     const automaton = new AFND(new Set(["q0"]), new Set(), {}, "q0", new Set());
     let i = 0;
@@ -20,9 +22,6 @@ export function byTokens(tokens, AFNDs = []) {
     AFNDs.push(automaton);
   });
 
-  return AFNDs;
-}
-export function byGrammar(grammar, AFNDs = []) {
   const rawStates = new Set();
   const rawFinalStates = new Set();
   const rawTransitions = [];
@@ -37,6 +36,11 @@ export function byGrammar(grammar, AFNDs = []) {
       const trimmed = prod.trim();
 
       if (!trimmed) {
+        rawFinalStates.add(from);
+        return;
+      }
+
+      if (trimmed === trimmed.toLowerCase()) {
         rawFinalStates.add(from);
         return;
       }
@@ -84,5 +88,14 @@ export function byGrammar(grammar, AFNDs = []) {
   });
 
   AFNDs.push(automaton);
+
   return AFNDs;
+}
+
+export function generateAFD(tokens, grammar) {
+  const AFNDs = generateAFNDs(tokens, grammar);
+  const mergedAFND = merge(AFNDs);
+  const AFD = mergedAFND.determinize();
+
+  return AFD;
 }
