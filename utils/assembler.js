@@ -37,11 +37,11 @@ export function merge(AFNDs, initial_state = "q0") {
     }
     
     for (const [key, targets] of automaton.transitions.entries()) {
-      const [origin, symbol] = JSON.parse(key);
+      const [origin, symbol] = key.split(",");
       const newOrigin = renameMap[origin];
       const newTargets = new Set([...targets].map((t) => renameMap[t]));
 
-      const transitionKey = JSON.stringify([newOrigin, symbol]);
+      const transitionKey = `${newOrigin},${symbol}`;
       if (newTransitions[transitionKey]) {
         for (const t of newTargets) newTransitions[transitionKey].add(t);
       } else {

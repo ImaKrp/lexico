@@ -9,7 +9,7 @@ try {
 
   const AFD = generateAFD(tokens, grammar);
 
-  const {tape, ts} = analyzer(AFD, example);
+  const { tape, ts } = analyzer(AFD, example);
 
   console.log(`[${tape.join(", ")}]\n`);
   ts.forEach((txt) =>

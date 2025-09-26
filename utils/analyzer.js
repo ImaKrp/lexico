@@ -1,21 +1,22 @@
-function analyzer(automaton, conteudo) {
+function afdAnalyzer(automaton, conteudo) {
   const tape = [];
   const ts = [];
+  const alphabet = automaton.alphabet;
   conteudo.split("\n").forEach((line, i) => {
-    line = line.trim().split(" ");
+    const labels = line.trim().split(" ");
 
-    line.forEach((label) => {
+    labels.forEach((label) => {
       let curr_state = automaton.initial_state;
 
       for (const c of label) {
-        const next_state = automaton.next_state(curr_state, c);
-
-        if (!next_state) {
+        if (!alphabet.has(c)) {
           curr_state = "X";
           break;
         }
 
-        curr_state = next_state;
+        const next_state = automaton.next_state(curr_state, c);
+
+        curr_state = next_state[0];
       }
 
       if (!automaton.final_states.has(curr_state)) {
@@ -30,4 +31,4 @@ function analyzer(automaton, conteudo) {
   return { tape, ts };
 }
 
-export default analyzer;
+export default afdAnalyzer;

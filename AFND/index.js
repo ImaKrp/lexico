@@ -8,7 +8,8 @@ export class AFND {
       this.transitions = transitions;
     } else {
       for (const [key, destinations] of Object.entries(transitions)) {
-        this.transitions.set(JSON.parse(key), new Set(destinations));
+        const [origin, char] = key.split(",");
+        this.add_transition(origin, char, destinations);
       }
     }
 
@@ -22,22 +23,30 @@ export class AFND {
   }
 
   add_transition(origin, symbol, destination) {
+    if (destination instanceof Set) {
+      destination = [...destination];
+    }
+    if (!Array.isArray(destination)) destination = [destination];
+
     if (!this.states.has(origin)) {
       throw new Error(`Origin state '${origin}' does not exist.`);
     }
-    if (!this.states.has(destination)) {
-      throw new Error(`Destination state '${destination}' does not exist.`);
-    }
-    if (symbol && !this.alphabet.has(symbol)) {
-      throw new Error(`Symbol '${symbol}' does not belong to the alphabet.`);
-    }
 
-    const key = JSON.stringify([origin, symbol]);
-    if (this.transitions.has(key)) {
-      this.transitions.get(key).add(destination);
-    } else {
-      this.transitions.set(key, new Set([destination]));
-    }
+    destination.forEach((d) => {
+      if (!this.states.has(d)) {
+        throw new Error(`Destination state '${d}' does not exist.`);
+      }
+      if (symbol && !this.alphabet.has(symbol)) {
+        throw new Error(`Symbol '${symbol}' does not belong to the alphabet.`);
+      }
+
+      const key = `${origin},${symbol}`;
+      if (this.transitions.has(key)) {
+        this.transitions.get(key).add(d);
+      } else {
+        this.transitions.set(key, new Set([d]));
+      }
+    });
   }
 
   determinize() {
@@ -64,9 +73,7 @@ export class AFND {
 
         currentSet.forEach((nfaState) => {
           for (const [tKey, destinations] of this.transitions.entries()) {
-            const [origin, transSymbol] = Array.isArray(tKey)
-              ? tKey
-              : JSON.parse(tKey);
+            const [origin, transSymbol] = tKey.split(",");
             if (origin === nfaState && transSymbol === symbol) {
               destinations.forEach((target) => nextSet.add(target));
             }
@@ -108,12 +115,30 @@ export class AFND {
     );
   }
 
+  determinizeAndIncludeErrState() {
+    const determinized = this.determinize();
+
+    determinized.add_state("X");
+
+    determinized.alphabet.forEach((char) => {
+      determinized.add_transition("X", char, "X");
+
+      determinized.states.forEach((state) => {
+        if (!determinized.next_state(state, char))
+          determinized.add_transition(state, char, "X");
+      });
+    });
+
+    return determinized;
+  }
+
   next_state(current_state, symbol) {
     const key = `${current_state},${symbol}`;
+
     const destinations = this.transitions.get(key) || new Set();
 
     if (destinations.size > 0) {
-      return [...destinations][0];
+      return [...destinations];
     }
     return null;
   }
