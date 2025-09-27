@@ -1,5 +1,5 @@
 function get_translated(s, t, show_status = true) {
-  if (t?.[s]) return show_status ? t[s]: t[s].replace("*","");
+  if (t?.[s]) return show_status ? t[s] : t[s].replace("*", "");
 
   return s;
 }
@@ -10,6 +10,13 @@ function show_table(AFD, translater) {
       .map((c) => String(c).padStart(6))
       .join("   |")}   |`
   );
+
+  console.log(
+    `---------+${new Array([...AFD.alphabet.values()].length)
+      .fill("---------+")
+      .join("")}`
+  );
+
   [...AFD.states.values()].forEach((s) => {
     console.log(
       `${get_translated(String(s), translater).padStart(6)}   |${[
