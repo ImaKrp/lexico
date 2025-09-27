@@ -118,7 +118,7 @@ export class AFND {
   determinizeAndIncludeErrState() {
     const determinized = this.determinize();
 
-    determinized.add_state("X");
+    determinized.add_state("X", true);
 
     determinized.alphabet.forEach((char) => {
       determinized.add_transition("X", char, "X");
