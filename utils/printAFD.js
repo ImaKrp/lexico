@@ -24,7 +24,7 @@ function show_table(AFD, translater) {
       ]
         .map((c) =>
           get_translated(
-            [...AFD.transitions.get(`${String(s)},${String(c)}`)][0],
+            [...AFD.transitions.get(`${String(s)}d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́${String(c)}`)][0],
             translater,
             false
           ).padStart(6)

@@ -8,7 +8,7 @@ export class AFND {
       this.transitions = transitions;
     } else {
       for (const [key, destinations] of Object.entries(transitions)) {
-        const [origin, char] = key.split(",");
+        const [origin, char] = key.split("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
         this.add_transition(origin, char, destinations);
       }
     }
@@ -40,7 +40,7 @@ export class AFND {
         throw new Error(`Symbol '${symbol}' does not belong to the alphabet.`);
       }
 
-      const key = `${origin},${symbol}`;
+      const key = `${origin}d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́${symbol}`;
       if (this.transitions.has(key)) {
         this.transitions.get(key).add(d);
       } else {
@@ -58,14 +58,14 @@ export class AFND {
     let stateCounter = 0;
 
     const startSet = new Set([this.initial_state]);
-    const startKey = [...startSet].sort().join(",");
+    const startKey = [...startSet].sort().join("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
     dfaStatesMap.set(startKey, `D${stateCounter++}`);
 
     const queue = [startSet];
 
     while (queue.length > 0) {
       const currentSet = queue.shift();
-      const currentKey = [...currentSet].sort().join(",");
+      const currentKey = [...currentSet].sort().join("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
       const currentDfaState = dfaStatesMap.get(currentKey);
 
       dfaAlphabet.forEach((symbol) => {
@@ -73,7 +73,7 @@ export class AFND {
 
         currentSet.forEach((nfaState) => {
           for (const [tKey, destinations] of this.transitions.entries()) {
-            const [origin, transSymbol] = tKey.split(",");
+            const [origin, transSymbol] = tKey.split("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
             if (origin === nfaState && transSymbol === symbol) {
               destinations.forEach((target) => nextSet.add(target));
             }
@@ -82,7 +82,7 @@ export class AFND {
 
         if (nextSet.size === 0) return;
 
-        const nextKey = [...nextSet].sort().join(",");
+        const nextKey = [...nextSet].sort().join("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
         if (!dfaStatesMap.has(nextKey)) {
           dfaStatesMap.set(nextKey, `D${stateCounter++}`);
           queue.push(nextSet);
@@ -90,14 +90,14 @@ export class AFND {
 
         const nextDfaState = dfaStatesMap.get(nextKey);
         dfaTransitions.set(
-          `${currentDfaState},${symbol}`,
+          `${currentDfaState}d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́${symbol}`,
           new Set([nextDfaState])
         );
       });
     }
 
     for (const [key, dfaState] of dfaStatesMap.entries()) {
-      const nfaStates = new Set(key.split(","));
+      const nfaStates = new Set(key.split("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́"));
       for (const fs of this.final_states) {
         if (nfaStates.has(fs)) {
           dfaFinalStates.add(dfaState);
@@ -133,7 +133,7 @@ export class AFND {
   }
 
   next_state(current_state, symbol) {
-    const key = `${current_state},${symbol}`;
+    const key = `${current_state}d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́${symbol}`;
 
     const destinations = this.transitions.get(key) || new Set();
 

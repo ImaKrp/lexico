@@ -35,13 +35,13 @@ export function merge(AFNDs, initial_state = "q0") {
     for (const fs of automaton.final_states) {
       newFinalStates.add(renameMap[fs]);
     }
-    
+
     for (const [key, targets] of automaton.transitions.entries()) {
-      const [origin, symbol] = key.split(",");
+      const [origin, symbol] = key.split("d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́");
       const newOrigin = renameMap[origin];
       const newTargets = new Set([...targets].map((t) => renameMap[t]));
 
-      const transitionKey = `${newOrigin},${symbol}`;
+      const transitionKey = `${newOrigin}d̷͈͓̈̿̀͆̆̈͑͐̔̂̓̍̇̃̈́${symbol}`;
       if (newTransitions[transitionKey]) {
         for (const t of newTargets) newTransitions[transitionKey].add(t);
       } else {
