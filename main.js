@@ -7,12 +7,13 @@ try {
   const tokens = read("./inputs/tokens.in");
   const example = read("./inputs/example.in", false);
   const grammar = read("./inputs/grammar.in");
+  const num_grammar = read("./inputs/num_grammar.in");
 
-  const AFD = generateAFD(tokens, grammar);
+  const { AFD, AFNDs } = generateAFD(tokens, { id: grammar, num: num_grammar });
 
-  const { tape, ts } = analyzer(AFD, example);
+  const { tape, ts } = analyzer(AFD, example, getSyntaxDic(tokens, AFD), AFNDs);
 
-  printAFD(AFD);
+  // printAFD(AFD);
 
   console.log(`\n\n[${tape.join(", ")}]\n`);
   ts.forEach((txt) =>
@@ -22,8 +23,6 @@ try {
       )} | ${String(txt.label).padEnd(20)}`
     )
   );
-
-  console.log(getSyntaxTape(tokens, AFD, tape));
 } catch (e) {
   console.log(e);
 }
@@ -43,21 +42,13 @@ function getTranslate() {
   };
 }
 
-function getSyntaxTape(tokens, AFD, prev_tape) {
-  const statesArr = [...AFD.states];
-
+function getSyntaxDic(tokens, AFD) {
   let dic = { X: "X" };
 
   tokens.forEach((token) => {
-    const { tape } = analyzer(AFD, token);
+    const { tape } = analyzer(AFD, token, undefined, undefined, false);
     dic[tape[0]] = `T_${token}`;
   });
 
-  statesArr.forEach((st) => {
-    if (!dic?.[st]) {
-      dic[st] = "T_id";
-    }
-  });
-
-  return prev_tape.map((key) => dic[key]);
+  return dic;
 }
