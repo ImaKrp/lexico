@@ -12,7 +12,7 @@ try {
 
   const { tape, ts } = analyzer(AFD, example);
 
-  printAFD(AFD, getTranslate());
+  printAFD(AFD);
 
   console.log(`\n\n[${tape.join(", ")}]\n`);
   ts.forEach((txt) =>
@@ -22,6 +22,8 @@ try {
       )} | ${String(txt.label).padEnd(20)}`
     )
   );
+
+  console.log(getSyntaxTape(tokens, AFD, tape));
 } catch (e) {
   console.log(e);
 }
@@ -39,4 +41,23 @@ function getTranslate() {
     D8: "*H",
     X: "*X",
   };
+}
+
+function getSyntaxTape(tokens, AFD, prev_tape) {
+  const statesArr = [...AFD.states];
+
+  let dic = { X: "X" };
+
+  tokens.forEach((token) => {
+    const { tape } = analyzer(AFD, token);
+    dic[tape[0]] = `T_${token}`;
+  });
+
+  statesArr.forEach((st) => {
+    if (!dic?.[st]) {
+      dic[st] = "T_id";
+    }
+  });
+
+  return prev_tape.map((key) => dic[key]);
 }

@@ -94,6 +94,8 @@ export function generateAFNDs(tokens, grammar) {
 
 export function generateAFD(tokens, grammar) {
   const AFNDs = generateAFNDs(tokens, grammar);
+
+  console.log(AFNDs);
   const mergedAFND = merge(AFNDs);
   const AFD = mergedAFND.determinizeAndIncludeErrState();
 
