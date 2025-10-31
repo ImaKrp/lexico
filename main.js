@@ -19,7 +19,7 @@ try {
   ts.forEach((txt) =>
     console.log(
       `${String(txt.line).padStart(4)} | ${String(txt.state).padStart(
-        4
+        7
       )} | ${String(txt.label).padEnd(20)}`
     )
   );
