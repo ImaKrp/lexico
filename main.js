@@ -6,10 +6,10 @@ import printAFD from "./utils/printAFD.js";
 try {
   const tokens = read("./inputs/tokens.in");
   const example = read("./inputs/example.in", false);
-  const grammar = read("./inputs/grammar.in");
-  const num_grammar = read("./inputs/num_grammar.in");
+  const id = read("./inputs/id_grammar.in");
+  const num = read("./inputs/num_grammar.in");
 
-  const { AFD, AFNDs } = generateAFD(tokens, { id: grammar, num: num_grammar });
+  const { AFD, AFNDs } = generateAFD(tokens, { id, num });
 
   const { tape, ts } = analyzer(AFD, example, getSyntaxDic(tokens, AFD), AFNDs);
 

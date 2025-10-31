@@ -10,7 +10,6 @@ const getTokenType = (label, state, dic, AFNDs) => {
 };
 
 function afdAnalyzer(automaton, conteudo, dic, AFNDs, treat = true) {
-  console.log(dic);
   const tape = [];
   const ts = [];
   const alphabet = automaton.alphabet;
