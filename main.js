@@ -27,21 +27,6 @@ try {
   console.log(e);
 }
 
-function getTranslate() {
-  return {
-    D0: "->S ",
-    D1: "[AC]",
-    D2: "*I",
-    D3: "*[FI]",
-    D4: "*B",
-    D5: "D",
-    D6: "G",
-    D7: "*E",
-    D8: "*H",
-    X: "*X",
-  };
-}
-
 function getSyntaxDic(tokens, AFD) {
   let dic = { X: "X" };
 
