@@ -1,0 +1,23 @@
+S' -> Programa
+
+Programa -> T_[ ListaComandos T_]
+
+ListaComandos -> Comando ListaComandos'
+ListaComandos' -> T_, Comando ListaComandos'
+ListaComandos' -> ''
+
+Comando -> Atribuicao
+Comando -> Condicional
+Comando -> Saida
+
+Atribuicao -> T_id T_foi Expressao
+
+Condicional -> T_se Expressao Comparador Expressao
+
+Saida -> T_sai Expressao
+
+Expressao -> T_id
+Expressao -> T_num
+
+Comparador -> T_<
+Comparador -> T_>
