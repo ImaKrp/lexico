@@ -4,11 +4,6 @@ function identifyToken(label, automatonMap) {
     let accepted = true;
 
     for (const c of label) {
-      if (!automaton.alphabet.has(c)) {
-        accepted = false;
-        break;
-      }
-
       const next = automaton.next_state(curr, c);
 
       if (!next?.[0]) {
