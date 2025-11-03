@@ -1,61 +1,49 @@
-const getTokenType = (label, state, dic, AFNDs) => {
-  if (dic?.[state]) return dic[state];
+function identifyToken(label, automatonMap) {
+  for (const [tokenType, automaton] of Object.entries(automatonMap)) {
+    let curr = automaton.initial_state;
+    let accepted = true;
 
-  for (const key in AFNDs.grammar) {
-    const automaton = AFNDs.grammar[key];
-
-    let skip = false;
-
-    const alphabet = [...automaton.alphabet];
-
-    for (const letter of label) {
-      if (!alphabet.includes(letter)) {
-        skip = true;
+    for (const c of label) {
+      if (!automaton.alphabet.has(c)) {
+        accepted = false;
         break;
       }
+
+      const next = automaton.next_state(curr, c);
+
+      if (!next?.[0]) {
+        accepted = false;
+        break;
+      }
+      curr = next[0];
     }
 
-    if (skip) continue;
-
-    const { tape } = afdAnalyzer(automaton, label, undefined, undefined, false);
-    if (tape[0] && tape[0] !== "X") return `T_${key}`;
+    if (accepted && automaton.final_states.has(curr)) {
+      return `T_${tokenType}`;
+    }
   }
   return "X";
-};
+}
 
-function afdAnalyzer(automaton, conteudo, dic, AFNDs, treat = true) {
+function analyzer(content, automatonMap) {
   const tape = [];
   const ts = [];
-  const alphabet = automaton.alphabet;
-  conteudo.split("\n").forEach((line, i) => {
+
+  content.split("\n").forEach((line, i) => {
     const labels = line.trim().split(" ");
 
     labels.forEach((label) => {
-      let curr_state = automaton.initial_state;
+      const tokenType = identifyToken(label, {
+        ...automatonMap.reserved,
+        ...automatonMap.grammar,
+      });
 
-      for (const c of label) {
-        if (!alphabet.has(c)) {
-          curr_state = "X";
-          break;
-        }
-
-        const next_state = automaton.next_state(curr_state, c);
-
-        curr_state = next_state[0];
-      }
-
-      if (!automaton.final_states.has(curr_state)) {
-        curr_state = "X";
-      }
-
-      if (treat) curr_state = getTokenType(label, curr_state, dic, AFNDs);
-
-      tape.push(curr_state);
-      ts.push({ line: i, state: curr_state, label });
+      tape.push(tokenType);
+      ts.push({ line: i, token: tokenType, label });
     });
   });
 
   return { tape, ts };
 }
 
-export default afdAnalyzer;
+export default analyzer;
