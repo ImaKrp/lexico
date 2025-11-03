@@ -3,6 +3,20 @@ const getTokenType = (label, state, dic, AFNDs) => {
 
   for (const key in AFNDs.grammar) {
     const automaton = AFNDs.grammar[key];
+
+    let skip = false;
+
+    const alphabet = [...automaton.alphabet];
+
+    for (const letter of label) {
+      if (!alphabet.includes(letter)) {
+        skip = true;
+        break;
+      }
+    }
+
+    if (skip) continue;
+
     const { tape } = afdAnalyzer(automaton, label, undefined, undefined, false);
     if (tape[0] && tape[0] !== "X") return `T_${key}`;
   }
