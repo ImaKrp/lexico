@@ -1,10 +1,27 @@
 [
-    thiaguinho foi 123 ,
-
-    se thiaguinho ><> 2 + 4
+    resultado_final foi 10 * 5 - 2,
+    
+    se contador > 10
     [
-        thiaguinho foi 1 - 2 ,
-
-        carlos foi 4
-    ]
+        contador foi contador + 1,
+        sai contador
+    ],
+    
+    valor foi 3 + 4 / 2,
+    
+    se valor_logico <> 1
+    [
+        valor_logico foi 0
+    ],
+    
+    se nome_usuario < 100
+    [
+        sai nome_usuario,
+        se teste >< 0
+        [
+            novo_teste foi 1
+        ]
+    ],
+    
+    sai resultado_final
 ]

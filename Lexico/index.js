@@ -2,6 +2,10 @@ import read from "../utils/read.js";
 import { generateAFD } from "./utils/generate.js";
 import analyzer from "./utils/analyzer.js";
 
+const treat = (entry) => {
+  return entry.replace(/([\[\],])/g, " $1 ");
+};
+
 const lexic = () => {
   try {
     const tokens = read("./inputs/tokens.in");
@@ -13,7 +17,9 @@ const lexic = () => {
 
     const { AFNDs, AFDs } = generateAFD(tokens, { id, num, comp_op, op });
 
-    const { tape, ts } = analyzer(example, AFNDs);
+    const treatedEntry = treat(example);
+
+    const { tape, ts } = analyzer(treatedEntry, AFNDs);
 
     return { tape, ts };
   } catch (e) {
