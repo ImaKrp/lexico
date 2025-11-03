@@ -108,5 +108,14 @@ export function generateAFD(tokens, grammars) {
   ]);
   const AFD = mergedAFND.determinizeAndIncludeErrState();
 
-  return { AFD, AFNDs };
+  const AFDs = { ...AFNDs };
+
+  Object.keys(AFDs).forEach((majorKey) => {
+    Object.keys(AFDs[majorKey]).forEach((minorKeys) => {
+      AFDs[majorKey][minorKeys] =
+        AFDs[majorKey][minorKeys].determinizeAndIncludeErrState();
+    });
+  });
+
+  return { AFD, AFNDs, AFDs };
 }

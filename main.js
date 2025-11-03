@@ -7,8 +7,10 @@ try {
   const example = read("./inputs/example.in", false);
   const id = read("./inputs/id_grammar.in");
   const num = read("./inputs/num_grammar.in");
+  const comp_op = read("./inputs/comp_op_grammar.in");
+  const op = read("./inputs/op_grammar.in");
 
-  const { AFNDs } = generateAFD(tokens, { id, num });
+  const { AFNDs, AFDs } = generateAFD(tokens, { id, num, comp_op, op });
 
   const { tape, ts } = analyzer(example, AFNDs);
 

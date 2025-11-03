@@ -12,12 +12,12 @@ Comando -> Saida
 
 Atribuicao -> T_id T_foi Expressao
 
-Condicional -> T_se Expressao Comparador Expressao
+Condicional -> T_se Expressao T_comp_op Expressao Programa
 
 Saida -> T_sai Expressao
 
-Expressao -> T_id
-Expressao -> T_num
+Expressao -> T_id Expressao'
+Expressao -> T_num Expressao'
 
-Comparador -> T_<
-Comparador -> T_>
+Expressao' -> T_op Expressao
+Expressao' -> T_op

@@ -28,13 +28,15 @@ function analyzer(content, automatonMap) {
     const labels = line.trim().split(" ");
 
     labels.forEach((label) => {
-      const tokenType = identifyToken(label, {
-        ...automatonMap.reserved,
-        ...automatonMap.grammar,
-      });
+      if (label) {
+        const tokenType = identifyToken(label, {
+          ...automatonMap.reserved,
+          ...automatonMap.grammar,
+        });
 
-      tape.push(tokenType);
-      ts.push({ line: i, token: tokenType, label });
+        tape.push(tokenType);
+        ts.push({ line: i, token: tokenType, label });
+      }
     });
   });
 
