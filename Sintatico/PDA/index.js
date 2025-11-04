@@ -1,3 +1,5 @@
+import fs from "fs";
+
 class PDA_SLR {
   constructor(dic, table, redGuide, ts) {
     this.dic = dic;
@@ -6,6 +8,21 @@ class PDA_SLR {
     this.stack = [0];
     this.ts = ts;
     this.syntax_values = [];
+
+    const timestamp = Date.now();
+    this.outputFile = `intermediate_${timestamp}.txt`;
+    this.tempCount = 0;
+    this.labelCount = 0;
+  }
+
+  newTemp() {
+    this.tempCount++;
+    return `t${this.tempCount}`;
+  }
+
+  newLabel() {
+    this.labelCount++;
+    return `L${this.labelCount}`;
   }
 
   getAction(state, symbol) {
@@ -61,8 +78,8 @@ class PDA_SLR {
         for (let i = 0; i < popCount; i++) this.stack.pop();
 
         const topState = this.stack[this.stack.length - 1];
-
         const gotoAction = this.getAction(topState, gen);
+
         if (!gotoAction) {
           console.log(`❌ Erro no GOTO após reduzir '${gen}'`);
           return false;
@@ -72,6 +89,8 @@ class PDA_SLR {
         this.stack.push(parseInt(gotoAction));
 
         if (debug) console.log(`[REDUCE] Regra ${ruleIndex} → ${gen}`);
+
+        this.generateIntermediate(gen, ruleIndex);
       } else if (action === "acc") {
         console.log("✅ Cadeia aceita!");
         return true;
@@ -79,6 +98,29 @@ class PDA_SLR {
         console.log(`❌ Ação inválida: '${action}'`);
         return false;
       }
+    }
+  }
+
+  generateIntermediate(gen) {
+    let code = "";
+
+    if (gen === "Expressao") {
+      const right = this.syntax_values.pop();
+      const op = this.syntax_values.pop();
+      const left = this.syntax_values.pop();
+
+      if (left?.name && right?.name && op?.name) {
+        const t = this.newTemp();
+        code = `${t} = ${left.name} ${op.name} ${right.name}`;
+        this.syntax_values.push({ state: "Expressao", name: t });
+      } else if (left?.name) {
+        this.syntax_values.push({ state: "Expressao", name: left.name });
+      }
+    }
+
+    if (code) {
+      fs.appendFileSync(this.outputFile, code + "\n");
+      console.log(`[GERADO] ${code}`);
     }
   }
 }
