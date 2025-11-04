@@ -30,7 +30,11 @@ const getSlr = () => {
     .filter((txt) => txt)
     .map((txt) => {
       const getSize = (labels) => {
-        return [gen.trim(), labels?.length ? labels.split(" ").length * 2 : 0];
+        return [
+          gen.trim(),
+          labels?.length ? labels.split(" ").length * 2 : 0,
+          labels.split(" "),
+        ];
       };
 
       let [gen, temp] = txt.split(" -> ");

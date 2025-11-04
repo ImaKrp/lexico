@@ -1,9 +1,11 @@
 class PDA_SLR {
-  constructor(dic, table, redGuide) {
+  constructor(dic, table, redGuide, ts) {
     this.dic = dic;
     this.table = table;
     this.redGuide = redGuide;
     this.stack = [0];
+    this.ts = ts;
+    this.syntax_values = [];
   }
 
   getAction(state, symbol) {
@@ -39,6 +41,18 @@ class PDA_SLR {
         const nextState = parseInt(action.slice(1));
         this.stack.push(symbol);
         this.stack.push(nextState);
+
+        const s_value = this.ts[index];
+
+        if (["T_id", "T_num", "T_op", "T_comp_op"].includes(symbol)) {
+          this.syntax_values.push({
+            state: symbol,
+            name: symbol === "T_num" ? Number(s_value.label) : s_value.label,
+          });
+        } else {
+          this.syntax_values.push({ state: symbol });
+        }
+
         index++;
       } else if (action.startsWith("r")) {
         const ruleIndex = parseInt(action.slice(1));

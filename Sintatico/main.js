@@ -6,6 +6,8 @@ const { tape, ts } = lexic();
 
 const { dic, table, redGuide } = getSlr();
 
-const pda = new PDA_SLR(dic, table, redGuide);
+const pda = new PDA_SLR(dic, table, redGuide, ts);
 
-pda.run(tape);
+pda.run(tape, false);
+
+console.log(pda.syntax_values);

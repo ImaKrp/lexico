@@ -1,0 +1,54 @@
+=== Início da Derivação 2025-11-04T00:48:07.779Z ===
+
+t1 = 2 Expressao'
+t2 = - t1
+t3 = 2 t2
+t4 = - t3
+t5 = 2 t4
+resultado_final = t5
+t6 = contador Expressao'
+t7 = 10 Expressao'
+t8 = 1 Expressao'
+t9 = + t8
+t10 = contador t9
+contador = t10
+t11 = contador Expressao'
+saida t11
+t12 = T_, Comando ListaComandos'
+t13 = T_[ ListaComandos T_]
+t14 = t11 > t11
+t15 = 2 Expressao'
+t16 = / t15
+t17 = 2 t16
+t18 = / t17
+t19 = 2 t18
+valor = t19
+t20 = valor_logico Expressao'
+t21 = 1 Expressao'
+t22 = 0 Expressao'
+valor_logico = t22
+t23 = T_[ ListaComandos T_]
+t24 = t22 <> t22
+t25 = nome_usuario Expressao'
+t26 = 100 Expressao'
+t27 = nome_usuario Expressao'
+saida t27
+t28 = teste Expressao'
+t29 = 0 Expressao'
+t30 = 1 Expressao'
+novo_teste = t30
+t31 = T_[ ListaComandos T_]
+t32 = t30 >< t30
+t33 = T_, Comando ListaComandos'
+t34 = T_[ ListaComandos T_]
+t35 = t30 >< t30
+t36 = resultado_final Expressao'
+saida t36
+t37 = T_, Comando ListaComandos'
+t38 = T_, Comando t37
+t39 = T_, Comando t38
+t40 = T_, Comando t39
+t41 = T_, Comando t40
+t42 = T_[ ListaComandos T_]
+
+✅ Cadeia aceita!
