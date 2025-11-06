@@ -126,3 +126,5 @@ class PDA_SLR {
 }
 
 export default PDA_SLR;
+
+//todo: save token !label (XXX foi YYY => XXX) name (YYY)
