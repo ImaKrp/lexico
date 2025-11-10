@@ -26,9 +26,13 @@ class PDA_SLR {
   }
 
   getAction(state, symbol) {
-    const col = this.dic[symbol];
+    const col = this.dic?.[symbol];
     if (col === undefined) return null;
-    return this.table[state][col] || "";
+
+    const row = this.table?.[state];
+    if (!row) return null;
+
+    return row[col] || "";
   }
 
   run(tokens, debug = false) {
@@ -49,7 +53,7 @@ class PDA_SLR {
 
       if (!action) {
         console.log(
-          `❌ Erro: nenhuma ação para estado ${state} e símbolo '${symbol}'`
+          `❌ Erro sintático: nenhuma ação para estado ${state} e símbolo '${symbol}'`
         );
         return false;
       }
@@ -60,11 +64,10 @@ class PDA_SLR {
         this.stack.push(nextState);
 
         const s_value = this.ts[index];
-
         if (["T_id", "T_num", "T_op", "T_comp_op"].includes(symbol)) {
           this.syntax_values.push({
             state: symbol,
-            name: symbol === "T_num" ? Number(s_value.label) : s_value.label,
+            name: s_value?.label ?? symbol,
           });
         } else {
           this.syntax_values.push({ state: symbol });
@@ -79,7 +82,6 @@ class PDA_SLR {
 
         const topState = this.stack[this.stack.length - 1];
         const gotoAction = this.getAction(topState, gen);
-
         if (!gotoAction) {
           console.log(`❌ Erro no GOTO após reduzir '${gen}'`);
           return false;
@@ -88,9 +90,7 @@ class PDA_SLR {
         this.stack.push(gen);
         this.stack.push(parseInt(gotoAction));
 
-        if (debug) console.log(`[REDUCE] Regra ${ruleIndex} → ${gen}`);
-
-        this.generateIntermediate(gen, ruleIndex);
+        this.generateIntermediate(gen);
       } else if (action === "acc") {
         console.log("✅ Cadeia aceita!");
         return true;
@@ -104,27 +104,53 @@ class PDA_SLR {
   generateIntermediate(gen) {
     let code = "";
 
+    // EXPRESSÃO — lida com aritmética e comparações
     if (gen === "Expressao") {
-      const right = this.syntax_values.pop();
-      const op = this.syntax_values.pop();
-      const left = this.syntax_values.pop();
+      // procura operandos e operador mais próximos
+      const last = this.syntax_values.length;
+      const right = this.syntax_values[last - 1];
+      const op = this.syntax_values[last - 2];
+      const left = this.syntax_values[last - 3];
 
-      if (left?.name && right?.name && op?.name) {
+      if (
+        left?.name &&
+        right?.name &&
+        op &&
+        (op.state === "T_op" || op.state === "T_comp_op")
+      ) {
         const t = this.newTemp();
         code = `${t} = ${left.name} ${op.name} ${right.name}`;
-        this.syntax_values.push({ state: "Expressao", name: t });
-      } else if (left?.name) {
-        this.syntax_values.push({ state: "Expressao", name: left.name });
+
+        // remove os três últimos e empilha o resultado
+        this.syntax_values.splice(last - 3, 3, { state: "Expressao", name: t });
+      } else if (right?.name) {
+        // expressão simples (ex: apenas um identificador)
+        this.syntax_values.splice(last - 1, 1, {
+          state: "Expressao",
+          name: right.name,
+        });
+      }
+    }
+
+    if (gen === "Atribuicao") {
+      const expr = this.syntax_values.pop();
+      this.syntax_values.pop();
+      const id = this.syntax_values.pop();
+
+      if (id?.name && expr?.name) {
+        code = `${id.name} = ${expr.name}`;
+        this.syntax_values.push({
+          state: "Atribuicao",
+          name: expr.name,
+          label: id.name,
+        });
       }
     }
 
     if (code) {
       fs.appendFileSync(this.outputFile, code + "\n");
-      console.log(`[GERADO] ${code}`);
     }
   }
 }
 
 export default PDA_SLR;
-
-//todo: save token !label (XXX foi YYY => XXX) name (YYY)
