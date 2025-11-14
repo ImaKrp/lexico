@@ -35,7 +35,7 @@ function analyzer(content, automatonMap) {
         });
 
         tape.push(tokenType);
-        ts.push({ line: i, token: tokenType, label });
+        ts.push({ line: i + 1, token: tokenType, label });
       }
     });
   });

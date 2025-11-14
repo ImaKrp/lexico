@@ -8,6 +8,12 @@ const { dic, table, redGuide } = getSlr();
 
 const pda = new PDA_SLR(dic, table, redGuide, ts);
 
-pda.run(tape, false);
+const result = pda.run(tape, false);
+
+if (!result.ok) {
+  console.log("ERRO:");
+  console.log(result.error.line, result.error.token, result.error.label);
+  console.log(result.error.message);
+}
 
 console.log(pda.syntax_values);

@@ -15,6 +15,16 @@ class PDA_SLR {
     this.labelCount = 0;
   }
 
+  deleteOutputFile() {
+    try {
+      if (fs.existsSync(this.outputFile)) {
+        fs.unlinkSync(this.outputFile);
+      }
+    } catch (err) {
+      console.log("⚠ Erro ao deletar arquivo intermediário:", err);
+    }
+  }
+
   newTemp() {
     this.tempCount++;
     return `t${this.tempCount}`;
@@ -35,6 +45,16 @@ class PDA_SLR {
     return row[col] || "";
   }
 
+  formatTokenError(index, msg) {
+    const t = this.ts[index] ?? {};
+    return {
+      line: t.line ?? -1,
+      token: t.token ?? "",
+      label: t.label ?? "",
+      message: msg,
+    };
+  }
+
   run(tokens, debug = false) {
     const input = [...tokens, "$"];
     let index = 0;
@@ -52,10 +72,39 @@ class PDA_SLR {
       }
 
       if (!action) {
-        console.log(
-          `❌ Erro sintático: nenhuma ação para estado ${state} e símbolo '${symbol}'`
-        );
-        return false;
+        const t = this.ts[index] || {};
+
+        // tokens válidos dentro de uma lista de comandos
+        const expectedInsideList = ["T_,", "T_]"];
+
+        // se estamos dentro de uma lista e apareceu um comando sem vírgula
+        const couldBeCommaMissing = expectedInsideList.some((tok) => {
+          const col = this.dic?.[tok];
+          return col !== undefined && this.table[state]?.[col];
+        });
+
+        let message = "";
+
+        if (couldBeCommaMissing) {
+          message = `Faltando vírgula entre comandos. Era esperado ',' antes de '${
+            t.label ?? symbol
+          }'.`;
+        } else {
+          message = `Erro sintático: não era esperado '${
+            t.label ?? symbol
+          }' aqui.`;
+        }
+
+        const err = {
+          line: t.line ?? -1,
+          token: symbol,
+          label: t.label,
+          message,
+        };
+
+        console.log("❌", err.message, " (linha", err.line, ")");
+        this.deleteOutputFile();
+        return { ok: false, error: err };
       }
 
       if (action.startsWith("s")) {
@@ -83,8 +132,14 @@ class PDA_SLR {
         const topState = this.stack[this.stack.length - 1];
         const gotoAction = this.getAction(topState, gen);
         if (!gotoAction) {
-          console.log(`❌ Erro no GOTO após reduzir '${gen}'`);
-          return false;
+          const err = this.formatTokenError(
+            index,
+            `Erro no GOTO após reduzir '${gen}'`
+          );
+
+          console.log("❌", err.message);
+          this.deleteOutputFile();
+          return { ok: false, error: err };
         }
 
         this.stack.push(gen);
@@ -93,10 +148,13 @@ class PDA_SLR {
         this.generateIntermediate(gen);
       } else if (action === "acc") {
         console.log("✅ Cadeia aceita!");
-        return true;
+        return { ok: true, error: null };
       } else {
-        console.log(`❌ Ação inválida: '${action}'`);
-        return false;
+        const err = this.formatTokenError(index, `Ação inválida '${action}'`);
+
+        console.log("❌", err.message);
+        this.deleteOutputFile();
+        return { ok: false, error: err };
       }
     }
   }
@@ -104,9 +162,7 @@ class PDA_SLR {
   generateIntermediate(gen) {
     let code = "";
 
-    // EXPRESSÃO — lida com aritmética e comparações
     if (gen === "Expressao") {
-      // procura operandos e operador mais próximos
       const last = this.syntax_values.length;
       const right = this.syntax_values[last - 1];
       const op = this.syntax_values[last - 2];
@@ -121,10 +177,8 @@ class PDA_SLR {
         const t = this.newTemp();
         code = `${t} = ${left.name} ${op.name} ${right.name}`;
 
-        // remove os três últimos e empilha o resultado
         this.syntax_values.splice(last - 3, 3, { state: "Expressao", name: t });
       } else if (right?.name) {
-        // expressão simples (ex: apenas um identificador)
         this.syntax_values.splice(last - 1, 1, {
           state: "Expressao",
           name: right.name,
