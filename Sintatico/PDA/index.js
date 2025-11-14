@@ -1,4 +1,6 @@
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 class PDA_SLR {
   constructor(dic, table, redGuide, ts) {
@@ -74,10 +76,14 @@ class PDA_SLR {
       if (!action) {
         const t = this.ts[index] || {};
 
-        // tokens válidos dentro de uma lista de comandos
+        const line = this.ts
+          .map((v, i) => ({ ...v, i }))
+          .filter(({ line }) => line === t.line);
+
+        const stringfiedLine = line.map(({ label }) => label).join(" ");
+
         const expectedInsideList = ["T_,", "T_]"];
 
-        // se estamos dentro de uma lista e apareceu um comando sem vírgula
         const couldBeCommaMissing = expectedInsideList.some((tok) => {
           const col = this.dic?.[tok];
           return col !== undefined && this.table[state]?.[col];
@@ -85,15 +91,43 @@ class PDA_SLR {
 
         let message = "";
 
-        if (couldBeCommaMissing) {
-          message = `Faltando vírgula entre comandos. Era esperado ',' antes de '${
-            t.label ?? symbol
-          }'.`;
-        } else {
-          message = `Erro sintático: não era esperado '${
-            t.label ?? symbol
-          }' aqui.`;
+        let pos = 0;
+
+        const tokensBf = line.filter(({ i }) => i < index);
+
+        if (tokensBf?.length > 0) {
+          tokensBf.forEach((t) => {
+            pos += t.label.split("").length + 1;
+          });
+
+          pos -= 1;
         }
+        if (!couldBeCommaMissing) {
+          pos += 1;
+        }
+
+        if (couldBeCommaMissing) {
+          message = `Expected ',' before '${t.label ?? symbol}'.`;
+        } else {
+          message = `Unexpected '${t.label ?? symbol}'`;
+        }
+
+        message += `\n\n${stringfiedLine}`;
+
+        message += `\n`;
+
+        for (let j = 0; j < pos; j++) {
+          message += ` `;
+        }
+
+        message += `^`;
+
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
+        const absolutePath = path.join(__dirname, "../../inputs/example.in");
+
+        message = `${absolutePath}:${t.line} - ${message}`;
 
         const err = {
           line: t.line ?? -1,
@@ -102,7 +136,6 @@ class PDA_SLR {
           message,
         };
 
-        console.log("❌", err.message, " (linha", err.line, ")");
         this.deleteOutputFile();
         return { ok: false, error: err };
       }
@@ -147,7 +180,6 @@ class PDA_SLR {
 
         this.generateIntermediate(gen);
       } else if (action === "acc") {
-        console.log("✅ Cadeia aceita!");
         return { ok: true, error: null };
       } else {
         const err = this.formatTokenError(index, `Ação inválida '${action}'`);

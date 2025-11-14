@@ -11,9 +11,9 @@ const pda = new PDA_SLR(dic, table, redGuide, ts);
 const result = pda.run(tape, false);
 
 if (!result.ok) {
-  console.log("ERRO:");
-  console.log(result.error.line, result.error.token, result.error.label);
-  console.log(result.error.message);
+  console.error("ERRO:");
+  console.error(result.error.message);
+} else {
+  console.log(pda.syntax_values);
+  console.log("✅ Cadeia aceita!");
 }
-
-console.log(pda.syntax_values);

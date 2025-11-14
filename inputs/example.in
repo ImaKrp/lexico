@@ -3,7 +3,7 @@
     
     se contador > 10
     [
-        contador foi contador + 1,  
+        contador foi contador + 1,
         sai contador
     ],
     
