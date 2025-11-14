@@ -102,7 +102,7 @@ class PDA_SLR {
 
           pos -= 1;
         }
-        if (!couldBeCommaMissing) {
+        if (!couldBeCommaMissing && tokensBf?.length > 0) {
           pos += 1;
         }
 
