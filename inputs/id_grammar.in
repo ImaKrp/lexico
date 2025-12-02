@@ -1,2 +1,2 @@
-S::=aA|bA|cA|dA|eA|fA|gA|hA|iA|jA|kA|lA|mA|nA|oA|pA|qA|rA|sA|tA|uA|vA|wA|xA|yA|zA|_A
+S::=$A
 A::=aA|bA|cA|dA|eA|fA|gA|hA|iA|jA|kA|lA|mA|nA|oA|pA|qA|rA|sA|tA|uA|vA|wA|xA|yA|zA|_A|

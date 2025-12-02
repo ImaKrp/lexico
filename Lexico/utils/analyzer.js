@@ -6,7 +6,7 @@ function identifyToken(label, automatonMap) {
     for (const c of label) {
       const next = automaton.next_state(curr, c);
 
-      if (!next?.[0]) {
+      if (!next?.[0] || next?.[0] === "X") {
         accepted = false;
         break;
       }

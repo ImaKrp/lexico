@@ -12,10 +12,10 @@ const lexic = () => {
     const example = read("./inputs/example.in", false);
     const id = read("./inputs/id_grammar.in");
     const num = read("./inputs/num_grammar.in");
-    const comp_op = read("./inputs/comp_op_grammar.in");
-    const op = read("./inputs/op_grammar.in");
+    const comp_op = read("./inputs/tokens_comp_op.in");
+    const op = read("./inputs/tokens_op.in");
 
-    const { AFNDs, AFDs } = generateAFD(tokens, { id, num, comp_op, op });
+    const { AFNDs } = generateAFD(tokens, { comp_op, op }, { id, num });
 
     const treatedEntry = treat(example);
 

@@ -1,7 +1,7 @@
 import { AFND } from "../AFND/index.js";
 import { merge } from "./assembler.js";
 
-export function generateAFNDs(tokens, grammars) {
+export function generateAFNDs(tokens, opperands, grammars) {
   let AFNDs = { reserved: {}, grammar: {} };
   tokens.map((t) => {
     const automaton = new AFND(new Set(["q0"]), new Set(), {}, "q0", new Set());
@@ -20,6 +20,38 @@ export function generateAFNDs(tokens, grammars) {
     automaton.final_states.add(curr_state);
 
     AFNDs.reserved[t] = automaton;
+  });
+
+  Object.keys(opperands).forEach((key) => {
+    const _tokens = opperands[key];
+
+    const keyAutomatons = [];
+
+    _tokens.map((t) => {
+      const automaton = new AFND(
+        new Set(["q0"]),
+        new Set(),
+        {},
+        "q0",
+        new Set()
+      );
+      let i = 0;
+      let curr_state = "q0";
+
+      for (const char of t) {
+        i++;
+        const new_state = "q" + i;
+        automaton.alphabet.add(char);
+        automaton.add_state(new_state);
+        automaton.add_transition(curr_state, char, new_state);
+        curr_state = new_state;
+      }
+
+      automaton.final_states.add(curr_state);
+
+      keyAutomatons.push(automaton);
+    });
+    AFNDs.grammar[key] = merge(keyAutomatons);
   });
 
   Object.keys(grammars).forEach((key) => {
@@ -99,8 +131,8 @@ export function generateAFNDs(tokens, grammars) {
   return AFNDs;
 }
 
-export function generateAFD(tokens, grammars) {
-  const AFNDs = generateAFNDs(tokens, grammars);
+export function generateAFD(tokens, opperands, grammars) {
+  const AFNDs = generateAFNDs(tokens, opperands, grammars);
 
   const mergedAFND = merge([
     ...Object.values(AFNDs.reserved),
