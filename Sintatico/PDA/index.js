@@ -11,8 +11,7 @@ class PDA_SLR {
     this.ts = ts;
     this.syntax_values = [];
 
-    const timestamp = Date.now();
-    this.outputFile = `intermediate_${timestamp}.txt`;
+    this.outputFile = `intermediate_${Date.now()}.txt`;
     this.tempCount = 0;
     this.labelCount = 0;
   }
@@ -58,6 +57,7 @@ class PDA_SLR {
   }
 
   run(tokens, debug = false) {
+    this.outputFile = `intermediate_${Date.now()}.txt`;
     const input = [...tokens, "$"];
     let index = 0;
     this.stack = [0];
@@ -137,7 +137,7 @@ class PDA_SLR {
         };
 
         this.deleteOutputFile();
-        return { ok: false, error: err };
+        return { ok: false, error: err, file: !err && this.outputFile };
       }
 
       if (action.startsWith("s")) {
@@ -172,7 +172,7 @@ class PDA_SLR {
 
           console.log("❌", err.message);
           this.deleteOutputFile();
-          return { ok: false, error: err };
+          return { ok: false, error: err, file: !err && this.outputFile };
         }
 
         this.stack.push(gen);
@@ -180,13 +180,13 @@ class PDA_SLR {
 
         this.generateIntermediate(gen);
       } else if (action === "acc") {
-        return { ok: true, error: null };
+        return { ok: true, error: null, file: this.outputFile };
       } else {
         const err = this.formatTokenError(index, `Ação inválida '${action}'`);
 
         console.log("❌", err.message);
         this.deleteOutputFile();
-        return { ok: false, error: err };
+        return { ok: false, error: err, file: !err && this.outputFile };
       }
     }
   }
